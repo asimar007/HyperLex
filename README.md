@@ -1,15 +1,38 @@
-# Ansh & Riley Full-Stack Template
+# HyperLex - AI-Powered Information Platform
 
-This is a full-stack template project for Software Composers to create  applications with AI.
+HyperLex is a modern web application that combines AI-powered search and analysis capabilities with real-time information aggregation. It provides intelligent insights and analysis through a conversational interface.
 
-## Getting started
-To create a new project, you go to `/paths`, choose from our list of Paths, and then use Cursor's Composer feature to quickly scaffold your project!
+## Features
 
-You can also edit the Path's prompt template to be whatever you like!
+- 🤖 **AI-Powered Analysis**: Integrates Mistral AI and Tavily API for intelligent content analysis
+- 💬 **Interactive Chat Interface**: Real-time streaming responses with context awareness
+- 📰 **News Integration**: Built-in Hacker News feed with real-time updates
+- 📊 **Smart Context Management**: Maintains conversation history and provides detailed reasoning
+- 📝 **Rich Content Display**: Markdown support with code highlighting
+- 📱 **Responsive Design**: Seamless experience across all devices
 
-## Technologies used
-This doesn't really matter, but is useful for the AI to understand more about this project. We are using the following technologies
-- React with Next.js 14 App Router
-- TailwindCSS
-- Firebase Auth, Storage, and Database
-- Multiple AI endpoints including OpenAI, Anthropic, and Replicate using Vercel's AI SDK
+## Tech Stack
+
+- **Frontend**: Next.js 14 (App Router), React, TypeScript
+- **Styling**: TailwindCSS, Framer Motion
+- **AI Services**:
+  - MistralAI for language processing
+  - Tavily API for web search
+- **Data Storage**: Local storage for chat history
+- **APIs**: Hacker News API integration
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/hyperlex.git
+cd hyperlex
+```
