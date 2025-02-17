@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+//import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { getTopStories } from "@/lib/hackerNews";
 import TopBar from "@/components/TopBar";
@@ -58,11 +58,11 @@ export default function HackerNews() {
         <nav className=" sticky top-16 z-40">
           <div className="container mx-auto px-4">
             <ScrollArea className="w-full whitespace-nowrap">
-              <div className="flex h-14 items-center space-x-4">
+              {/* <div className="flex h-14 items-center space-x-4">
                 <button className="px-4 py-2 text-sm font-medium text-gray-900 rounded-md bg-gray-100/80 hover:bg-gray-200/80 transition-colors">
                   Top Stories
                 </button>
-              </div>
+              </div> */}
               <ScrollBar orientation="horizontal" />
             </ScrollArea>
           </div>

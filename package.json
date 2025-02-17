@@ -1,6 +1,6 @@
 {
-  "name": "template-2",
-  "version": "0.1.0",
+  "name": "hyperlex",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
