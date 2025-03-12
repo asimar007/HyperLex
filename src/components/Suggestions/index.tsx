@@ -6,11 +6,11 @@ import { SuggestionType } from "@/types";
 export const suggestions: SuggestionType[] = [
   {
     label: "Tech News & Updates",
-    prefix: "Summarize the latest developments in India Tech: ",
+    prefix: "Summarize the latest developments in India Tech. ",
   },
   {
     label: "Indian Politics",
-    prefix: "Analyze recent political events in India regarding: ",
+    prefix: "Analyze recent political events in India regarding. ",
   },
   {
     label: "Financial Markets",

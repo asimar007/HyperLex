@@ -7,6 +7,9 @@ import remarkGfm from "remark-gfm";
 import TopBar from "@/components/TopBar";
 import HeroSection from "@/components/HeroSection";
 import BackgroundGrid from "@/components/BackgroundGrid";
+import ReasoningModal from "@/components/ReasoningModal";
+import ChatForm from "@/components/ChatForm";
+import ChatInput from "@/components/ChatInput";
 import { chatStorage } from "@/lib/chatStorage";
 import {
   LoadingIndicators,
@@ -439,54 +442,14 @@ ${sourcesTable}`;
                 transition={{ duration: 0.3 }}
               >
                 <HeroSection />
-                <form
+                <ChatForm
+                  input={input}
+                  isLoading={isLoading}
                   onSubmit={handleSubmit}
-                  className="w-full max-w-3xl mx-auto px-4 md:px-8"
-                >
-                  <div className="relative rounded-xl shadow-xl border border-gray-700/50 backdrop-blur-sm">
-                    <textarea
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      placeholder="Message HyperLex..."
-                      className="w-full px-4 py-3 bg-transparent text-black placeholder-gray-400 border-0 focus:ring-0 focus:outline-none resize-none min-h-[60px] max-h-[200px] text-sm"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSubmit(e);
-                        }
-                      }}
-                      style={{
-                        height: "60px",
-                        overflowY: "auto",
-                      }}
-                    />
-                    <div className="absolute right-2 bottom-2 flex items-center gap-2">
-                      <button
-                        type="submit"
-                        disabled={isLoading || !input.trim()}
-                        className="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 group"
-                      >
-                        {isLoading ? (
-                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : (
-                          <svg
-                            className="w-5 h-5 transform group-hover:scale-110 transition-transform"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                          >
-                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                          </svg>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Suggestions */}
-                  <Suggestions
-                    selectedSuggestion={selectedSuggestion}
-                    onSuggestionClick={handleSuggestionClick}
-                  />
-                </form>
+                  onChange={(e) => setInput(e.target.value)}
+                  selectedSuggestion={selectedSuggestion}
+                  onSuggestionClick={handleSuggestionClick}
+                />
               </motion.div>
             ) : (
               <motion.div
@@ -563,8 +526,8 @@ ${sourcesTable}`;
                             }}
                             className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1"
                           >
-                            <span>View Full Data</span>
-                            <svg
+                            {/* <span>View Full Data</span> */}
+                            {/* <svg
                               className="w-4 h-4"
                               fill="none"
                               stroke="currentColor"
@@ -576,7 +539,7 @@ ${sourcesTable}`;
                                 strokeWidth={2}
                                 d="M13 7l5 5m0 0l-5 5m5-5H6"
                               />
-                            </svg>
+                            </svg> */}
                           </button>
                         </div>
                         <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4">
@@ -961,149 +924,20 @@ ${sourcesTable}`;
 
       {/* Updated floating input box styling - show immediately after first submission */}
       {hasSubmitted && (
-        <div
+        <ChatInput
+          input={input}
+          isLoading={isLoading}
+          onSubmit={handleSubmit}
+          onChange={(e) => setInput(e.target.value)}
           className={`fixed bottom-6 left-0 right-0 flex justify-center transition-all duration-300 ${
             isSidebarOpen ? "pl-64" : "pl-0"
           }`}
-        >
-          <form onSubmit={handleSubmit} className="w-full max-w-[704px] mx-4">
-            <div className="relative bg-white rounded-xl shadow-lg border border-gray-200">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Message HyperLex..."
-                className="w-full p-4 pr-24 rounded-xl border-0 focus:ring-0 focus:outline-none resize-none h-[56px] bg-white text-gray-900 placeholder-gray-500 text-sm"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmit(e);
-                  }
-                }}
-                rows={1}
-                style={{
-                  minHeight: "56px",
-                  maxHeight: "200px",
-                }}
-              />
-              <div className="absolute right-2 bottom-2 flex items-center gap-2">
-                <button
-                  type="submit"
-                  disabled={isLoading || !input.trim()}
-                  className="p-2 rounded-lg bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
-                  aria-label="Send message"
-                >
-                  <svg
-                    className="w-5 h-5 rotate-90"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
+        />
       )}
 
       {/* Modal for Tavily Data */}
-      {showTavilyModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="bg-white/95 backdrop-blur-md rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-hidden shadow-2xl border border-gray-200/50"
-          >
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-50 rounded-lg">
-                  <svg
-                    className="w-5 h-5 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-800">
-                  Full Tavily Response
-                </h3>
-              </div>
-              <button
-                onClick={() => setShowTavilyModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-              >
-                <svg
-                  className="w-5 h-5 text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div className="overflow-y-auto max-h-[calc(80vh-8rem)] pr-2 custom-scrollbar">
-              <pre className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 font-mono shadow-inner">
-                {JSON.stringify(selectedMessageData?.tavily, null, 2)}
-              </pre>
-            </div>
-          </motion.div>
-        </div>
-      )}
 
       {/* Modal for Reasoning Input */}
-      {showReasoningModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">
-                Full Reasoning Input
-              </h3>
-              <button
-                onClick={() => setShowReasoningModal(false)}
-                className="text-gray-600 hover:text-gray-700"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-            <pre className="whitespace-pre-wrap text-sm text-gray-600 font-mono">
-              {selectedMessageData?.reasoning}
-            </pre>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
