@@ -2,33 +2,236 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  HyperLex tokens.
+  Paper and ink for reading, a deep ink blue for actions,
+  and a highlighter yellow reserved for citations.
+*/
 :root {
-  --foreground-rgb: 0, 0, 0;
+  --paper: 245 246 248; /* #F5F6F8 */
+  --surface: 255 255 255; /* #FFFFFF */
+  --ink: 20 33 61; /* #14213D */
+  --muted: 91 100 117; /* #5B6475 */
+  --rule: 223 227 234; /* #DFE3EA */
+  --accent: 29 63 175; /* #1D3FAF */
+  --accent-ink: 255 255 255;
+  --marker: 255 228 92; /* #FFE45C */
+  --marker-ink: 20 33 61;
+  --danger: 180 35 24; /* #B42318 */
+  color-scheme: light;
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: white;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: 15 20 32; /* #0F1420 */
+    --surface: 23 30 46; /* #171E2E */
+    --ink: 230 233 240; /* #E6E9F0 */
+    --muted: 152 162 180; /* #98A2B4 */
+    --rule: 44 54 76; /* #2C364C */
+    --accent: 147 170 255; /* #93AAFF */
+    --accent-ink: 15 20 32;
+    --marker: 234 208 60; /* #EAD03C */
+    --marker-ink: 15 20 32;
+    --danger: 255 140 128; /* #FF8C80 */
+    color-scheme: dark;
   }
 }
-.custom-scrollbar::-webkit-scrollbar {
-  width: 8px;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-paper font-sans text-ink antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: rgb(var(--marker));
+    color: rgb(var(--marker-ink));
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  textarea:focus-visible {
+    outline: none;
+  }
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-3.5 py-2 text-sm font-semibold text-accent-ink transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .btn-quiet {
+    @apply inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted transition-colors hover:bg-rule/60 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  /* Working indicator */
+  .pulse-dot {
+    @apply inline-block h-2 w-2 rounded-full bg-accent;
+    animation: pulse-dot 1.2s ease-in-out infinite;
+  }
+
+  /* ---------- Answer typography ---------- */
+  .answer {
+    @apply max-w-[40rem] font-serif text-[17px] leading-[1.75] text-ink;
+    font-optical-sizing: auto;
+  }
+  .answer > :first-child {
+    margin-top: 0;
+  }
+  .answer p,
+  .answer ul,
+  .answer ol,
+  .answer blockquote,
+  .answer pre,
+  .answer .table-wrap {
+    margin: 0 0 1.1em;
+  }
+  .answer h1,
+  .answer h2,
+  .answer h3,
+  .answer h4 {
+    @apply font-sans font-semibold tracking-tight text-ink;
+    line-height: 1.3;
+    margin: 1.9em 0 0.6em;
+  }
+  .answer h1,
+  .answer h2 {
+    font-size: 1.2rem;
+  }
+  .answer h3,
+  .answer h4 {
+    font-size: 1.05rem;
+  }
+  .answer ul {
+    list-style: disc;
+    padding-left: 1.35em;
+  }
+  .answer ol {
+    list-style: decimal;
+    padding-left: 1.5em;
+  }
+  .answer li {
+    margin: 0.3em 0;
+    padding-left: 0.2em;
+  }
+  .answer li::marker {
+    color: rgb(var(--muted));
+  }
+  .answer strong {
+    font-weight: 650;
+  }
+  .answer a:not(.cite-chip) {
+    @apply text-accent underline decoration-accent/40 underline-offset-2 hover:decoration-accent;
+  }
+  .answer blockquote {
+    @apply border-l-2 border-rule pl-4 italic text-muted;
+  }
+  .answer hr {
+    @apply my-8 border-rule;
+  }
+  .answer code {
+    @apply rounded bg-rule/60 px-1 py-0.5 font-mono text-[0.85em];
+  }
+  .answer pre {
+    @apply overflow-x-auto rounded-lg border border-rule bg-surface p-4 font-mono text-[13.5px] leading-relaxed;
+  }
+  .answer pre code {
+    @apply bg-transparent p-0 text-[inherit];
+  }
+  .answer .table-wrap {
+    @apply overflow-x-auto rounded-lg border border-rule;
+  }
+  .answer table {
+    @apply w-full border-collapse font-sans text-sm leading-normal;
+  }
+  .answer th {
+    @apply border-b border-rule bg-rule/40 px-3 py-2 text-left font-semibold;
+  }
+  .answer td {
+    @apply border-b border-rule px-3 py-2 align-top;
+  }
+  .answer tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* Streaming caret */
+  .caret {
+    @apply ml-0.5 inline-block h-[1.05em] w-[0.5em] translate-y-[0.15em] rounded-[1px] bg-accent;
+    animation: caret-blink 1s steps(1) infinite;
+  }
+
+  /* ---------- Citations: the one loud element ---------- */
+  /*
+    Both wrapper and chip are plain inline boxes, not inline-blocks: with no space
+    before the chip, "banks" + "2" + "." can't be split across lines.
+  */
+  .cite {
+    position: relative;
+  }
+  .cite-chip {
+    @apply rounded font-sans font-semibold no-underline transition-colors;
+    position: relative;
+    top: -0.4em;
+    margin-left: 0.15em;
+    padding: 0.05em 0.32em;
+    font-size: 0.68em;
+    line-height: 1;
+    background: rgb(var(--accent) / 0.1);
+    color: rgb(var(--accent));
+  }
+  .cite-chip:hover,
+  .cite-chip:focus-visible,
+  .cite-chip[data-active="true"] {
+    background: rgb(var(--marker));
+    color: rgb(var(--marker-ink));
+  }
+  .cite-card {
+    @apply invisible absolute z-20 flex w-80 flex-col gap-1 rounded-lg border border-rule bg-surface p-3 text-left font-sans opacity-0 shadow-lg transition-opacity duration-150;
+    max-width: min(20rem, calc(100vw - 2rem));
+    bottom: calc(100% + 0.25rem);
+    left: 50%;
+    transform: translateX(-50%);
+    line-height: 1.4;
+  }
+  .cite:hover .cite-card,
+  .cite:focus-within .cite-card {
+    @apply visible opacity-100;
+  }
+  @media (hover: none) {
+    .cite-card {
+      display: none;
+    }
+  }
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(156, 163, 175, 0.5);
-  border-radius: 20px;
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(156, 163, 175, 0.7);
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

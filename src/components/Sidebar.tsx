@@ -1,89 +1,105 @@
 "use client";
 
-import Link from "next/link";
+import { useMemo } from "react";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
-import { History, Home, MessageSquarePlus, Newspaper } from "lucide-react";
+import { Newspaper, Plus, Search, Trash2 } from "lucide-react";
+import { useChat } from "@/context/ChatProvider";
+import { classNames } from "@/lib/utils";
 
-const menuItems = [
-  {
-    title: "Home",
-    icon: Home,
-    href: "/",
-  },
-  {
-    title: "New Chat",
-    icon: MessageSquarePlus,
-    href: "/chat/new",
-  },
-  {
-    title: "Hackernews",
-    icon: Newspaper,
-    href: "/hackernews",
-  },
-  {
-    title: "Chat History",
-    icon: History,
-    href: "/chat/history",
-  },
-];
+export default function Sidebar({ onNavigate }: { onNavigate: (href: string) => void }) {
+  const pathname = usePathname();
+  const { hydrated, conversations, activeId, busyTurnId, newChat, openConversation, deleteConversation } =
+    useChat();
 
-interface SidebarProps {
-  isSidebarOpen: boolean;
-}
+  const recent = useMemo(
+    () => [...conversations].sort((a, b) => b.updatedAt - a.updatedAt),
+    [conversations]
+  );
 
-const Sidebar = ({ isSidebarOpen }: { isSidebarOpen: boolean }) => {
-  const pathname = usePathname(); // Add this line to get the current path
-  const [isLargeScreen, setIsLargeScreen] = useState(false);
-
-  // Handle window resize with useEffect
-  useEffect(() => {
-    const checkScreenSize = () => {
-      setIsLargeScreen(window.innerWidth >= 1024);
-    };
-
-    // Check initial size
-    checkScreenSize();
-
-    // Add event listener
-    window.addEventListener("resize", checkScreenSize);
-
-    // Cleanup
-    return () => window.removeEventListener("resize", checkScreenSize);
-  }, []);
+  const navItem = (active: boolean) =>
+    classNames(
+      "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+      active ? "bg-rule/70 text-ink" : "text-muted hover:bg-rule/50 hover:text-ink"
+    );
 
   return (
-    <div
-      className={`fixed top-16 left-0 z-40 h-[calc(100vh-4rem)] bg-white border-r border-gray-200
-        transition-transform duration-300 ease-in-out
-        ${isSidebarOpen ? "translate-x-0 shadow-lg" : "-translate-x-full"}
-        w-[80vw] md:w-64
-        ${isLargeScreen ? "" : "will-change-transform"}`}
-    >
-      <nav className="px-3 py-4 space-y-1.5">
-        {menuItems.map((item) => (
-          <Link
-            key={item.title}
-            href={item.href}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium 
-              transition-all duration-200 group relative overflow-hidden
-              ${
-                pathname === item.href
-                  ? "bg-gray-900 text-white shadow-md"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-            <item.icon
-              className={`h-4.5 w-4.5 transition-all duration-200 group-hover:scale-110 
-                ${pathname === item.href ? "text-white" : "text-gray-500"}`}
-            />
-            <span className="font-medium relative z-10">{item.title}</span>
-          </Link>
-        ))}
-      </nav>
-    </div>
-  );
-};
+    <nav className="flex h-full flex-col gap-5 p-3" aria-label="Main">
+      <button
+        type="button"
+        className="btn-primary w-full justify-start"
+        onClick={() => {
+          newChat();
+          onNavigate("/");
+        }}
+      >
+        <Plus className="h-4 w-4" />
+        New research
+      </button>
 
-export default Sidebar;
+      <ul className="space-y-0.5">
+        <li>
+          <button type="button" className={navItem(pathname === "/")} onClick={() => onNavigate("/")}>
+            <Search className="h-4 w-4" />
+            Research
+          </button>
+        </li>
+        <li>
+          <button
+            type="button"
+            className={navItem(pathname === "/hackernews")}
+            onClick={() => onNavigate("/hackernews")}
+          >
+            <Newspaper className="h-4 w-4" />
+            Hacker News
+          </button>
+        </li>
+      </ul>
+
+      <section className="flex min-h-0 flex-1 flex-col" aria-labelledby="recent-heading">
+        <h2 id="recent-heading" className="px-3 pb-2 text-xs font-semibold text-muted">
+          Recent
+        </h2>
+        <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
+          {hydrated && recent.length === 0 && (
+            <p className="px-3 text-sm leading-relaxed text-muted">Questions you ask are saved here, in this browser.</p>
+          )}
+          <ul className="space-y-0.5">
+            {recent.map((c) => {
+              const isActive = pathname === "/" && c.id === activeId;
+              const isWorking = c.turns.some((t) => t.id === busyTurnId);
+              return (
+                <li key={c.id} className="group relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      openConversation(c.id);
+                      onNavigate("/");
+                    }}
+                    className={classNames(
+                      "flex w-full items-center gap-2 rounded-lg py-2 pl-3 pr-9 text-left text-sm transition-colors",
+                      isActive ? "bg-rule/70 text-ink" : "text-muted hover:bg-rule/50 hover:text-ink"
+                    )}
+                    aria-current={isActive ? "page" : undefined}
+                  >
+                    {isWorking && <span className="pulse-dot shrink-0" aria-label="Working" />}
+                    <span className="truncate">{c.title}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm(`Delete "${c.title}"?`)) deleteConversation(c.id);
+                    }}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted opacity-0 transition-opacity hover:bg-rule hover:text-danger focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+                    aria-label={`Delete ${c.title}`}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </section>
+    </nav>
+  );
+}

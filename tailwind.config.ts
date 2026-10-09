@@ -1,28 +1,27 @@
 import type { Config } from "tailwindcss";
+import defaultTheme from "tailwindcss/defaultTheme";
+
+const token = (name: string) => `rgb(var(--${name}) / <alpha-value>)`;
 
 const config: Config = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      colors: {
+        paper: token("paper"),
+        surface: token("surface"),
+        ink: token("ink"),
+        muted: token("muted"),
+        rule: token("rule"),
+        accent: token("accent"),
+        "accent-ink": token("accent-ink"),
+        marker: token("marker"),
+        "marker-ink": token("marker-ink"),
+        danger: token("danger"),
       },
-      animation: {
-        gradient: "gradient 6s linear infinite",
-      },
-      keyframes: {
-        gradient: {
-          "0%, 100%": {
-            "background-size": "200% 200%",
-            "background-position": "0% 50%",
-          },
-          "50%": {
-            "background-size": "200% 200%",
-            "background-position": "100% 50%",
-          },
-        },
+      fontFamily: {
+        sans: ["var(--font-sans)", ...defaultTheme.fontFamily.sans],
+        serif: ["var(--font-serif)", "Georgia", ...defaultTheme.fontFamily.serif],
       },
     },
   },

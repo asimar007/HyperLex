@@ -1,151 +1,85 @@
 # HyperLex AI
 
-_Your Curious Companion for Smarter Web Exploration_
+_Your curious companion for smarter web exploration_
 
-🚀 **Imagine having a research assistant who never sleeps** – that's HyperLex AI. Born from my late-night coding sessions and countless cups of coffee, this project is my answer to information overload in the AI era. While it shares DNA with tools like Perplexity AI, I've injected it with some personal magic dust.
+Ask a question and HyperLex searches the web, reads what it finds, and writes an answer with numbered citations you can check. Hover a citation to preview its source; the matching source card lights up like a highlighter mark. It shares DNA with Perplexity, plus a live Hacker News feed where any story is one click away from a sourced summary.
 
-## Screenshots
+It runs on free API tiers: Google Gemini (or Groq) for writing and Tavily for search. Any OpenAI-compatible provider works.
 
-### Home Page
+## Features
 
-![Homepage](https://github.com/asimar007/Cross-Region-Migration-of-AWS-EBS-Volumes/blob/main/Screenshot/HyperLex/HomePage.png?raw=true)
+- **Cited answers.** Every claim is tied to a numbered source. Answers stream in as they're written, and you can stop, retry or regenerate them.
+- **Real follow-ups.** Ask "who pays for it?" and HyperLex rewrites it into a standalone search using the conversation so far.
+- **History.** Conversations are saved in your browser and listed in the sidebar.
+- **Hacker News.** Top, New, Best, Ask HN and Show HN feeds, with a Research button on every story.
+- **Suggested follow-up questions** after each answer.
+- Light and dark mode, mobile layout, keyboard friendly.
 
----
-
-### Sources
-
-![Source Image](https://github.com/asimar007/Cross-Region-Migration-of-AWS-EBS-Volumes/blob/main/Screenshot/HyperLex/Source%20Image.png?raw=true)
-
----
-
-### Response
-
-![Response](https://github.com/asimar007/Cross-Region-Migration-of-AWS-EBS-Volumes/blob/main/Screenshot/HyperLex/Response.png?raw=true)
-
----
-
-### Sources Tab
-
-![Sources Tab](https://github.com/asimar007/Cross-Region-Migration-of-AWS-EBS-Volumes/blob/main/Screenshot/HyperLex/Source%20Tab.png?raw=true)
-
----
-
-### Hackernews Feed
-
-![Hackernews Feed](https://github.com/asimar007/Cross-Region-Migration-of-AWS-EBS-Volumes/blob/main/Screenshot/HyperLex/Hackernews%20Feed.png?raw=true)
-
-## Table of Contents
-
-- [What's the Big Idea?](#whats-the-big-idea)
-- [Why Build Another AI Tool?](#why-build-another-ai-tool)
-- [Under the Hood (Features)](#under-the-hood)
-- [Cool Stuff You Can Do](#cool-stuff-you-can-do)
-- [Battle Scars (What I Learned)](#battle-scars)
-
-- [Usage](#usage)
-- [Let's Get Cooking (Installation)](#lets-get-cooking)
-
-## What's the Big Idea?
-
-We've all been there – drowning in 15 open tabs, three conflicting articles, and no clear answers. HyperLex AI is my attempt to fix that mess. It's like if Wikipedia, ChatGPT, and your tech-savvy friend had a baby.
-
-**The Goodies You Get:**
-
-- Instant analysis of complex topics.
-- Live tech news from Hacker News baked right in
-- A chat interface that actually remembers what you talked about yesterday
-- Sources cited like a proper research paper (take that, Wikipedia!)
-
-## Why Build Another AI Tool?
-
-_(Confession Time 😁)_  
-I fell in love with Perplexity AI but kept thinking: "What if it could...?" So I rage-coded for three weekends straight. Here's my personal spin:
-
-- Hacker News Integration
-- Providing a lightweight, developer-friendly codebase for educational purposes.
-- Focusing on performance optimization and scalability.
-
-_**Disclaimer:** This is my weekend project, not the next billion-dollar startup. Use it, break it, learn from it!_
-
-## Under the Hood
-
-_"What sorcery is this?" – My Mom_
-
-**Frontend Magic**
-
-- Next.js 14 (App Router) – Because I like shiny new things
-- TailwindCSS – For those "I want it purple with sparkles" moments
-- Framer Motion – Makes things wiggle (productivity boost, trust me)
-
-**Brain Parts**
-
-- DeepSeekAI – The actual smart cookie
-- Tavily API – Our simple web-crawling sidekick
-- Local Storage – Remembers your weird questions so you don't have to
-
-**News Engine**
-
-- Hacker News Feed – Fresh tech drama delivered hot
-
-## Cool Stuff You Can Do (Features)
-
-### 🤖 Ask Anything Mode
-
-"Explain quantum computing like I'm 5" → Get a answer with puppet analogies
-
-### 📰 Tech News Radar
-
-- Live Hacker News feed
-- Filter by drama level (😴 Mild → 🤯 Meltdown)
-
-### 💬 Chat Time Machine
-
-Your conversation history stays put – even after you close that incognito tab
-
-### 🔍 Source Detective Mode
-
-Click sources to see where the AI got its info – perfect for fact-checking your friend's conspiracy theories
-
-## Battle Scars (What I Learned)
-
-_What Didn't Kill Me..._
-
-- **Next.js 14 App Router**  
-  Learned to love/hate file-based routing. Pro tip: `layout.tsx` is life
-- **Integration of multiple AI services (DeepSeek AI, Tavily)**
-- **Streaming Responses**  
-  Made me appreciate every loading spinner I've ever hated
-- **TypeScript Types**  
-  Defined 37 variations of "AI might say something weird"
-- **Mobile First**  
-  Because apparently people use phones now? Wild.
-
-## Let's Get Cooking
-
-**You'll Need:**
-
-- Node.js (v20+) – The newer the better
-- API keys (free tier works):
-
-  - DeepSeek API (bring your own brain)
-  - Tavily API (our web crawler buddy)
-
-## Usage
-
-The application offers multiple ways to interact:
-
-1.  **Chat Interface** : Ask questions or request analysis on any topic.
-2.  **News Feed** : Browse the latest tech news from Hacker News.
-3.  **Suggestions** : Use predefined prompts for quick access to common queries.
-
----
-
-**Setup Cheat Code:**
+## How it works
 
 ```
+Browser ──POST /api/chat──▶ API route
+                             1. Rewrite follow-ups into a search query (LLM)
+                             2. Search the web (Tavily)
+                             3. Stream a cited answer (LLM)
+        ◀── NDJSON events: status, sources, meta, delta, done | error
+```
+
+- `src/app/api/chat/route.ts` runs the pipeline and streams events.
+- `src/server/llm.ts` talks to any OpenAI-compatible API, with presets for Gemini, Groq and Mistral. `src/server/` also holds the Tavily client and prompts. API keys never reach the browser.
+- `src/context/ChatProvider.tsx` holds conversations, streaming and persistence, so an answer keeps streaming even if you switch to the Hacker News page.
+
+## Setup
+
+You'll need Node.js 18.17 or newer, plus two free API keys:
+
+- **Google Gemini** for writing answers: create a key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). No card needed.
+- **Tavily** for web search: create a key at [app.tavily.com](https://app.tavily.com).
+
+```bash
 git clone https://github.com/asimar007/HyperLex
 cd HyperLex
-echo "Hello from Asim" > .env.local
-npm install
-npm run dev
+cp .env.example .env.local   # then paste in GEMINI_API_KEY and TAVILY_API_KEY
+bun install
+bun dev
 ```
+
+Open http://localhost:3000.
+
+### Choosing an AI provider
+
+Set one key and HyperLex picks the provider automatically. If several keys are set, Gemini wins, then Groq, then Mistral.
+
+| Provider | Key | Free? | Default model | Notes |
+|---|---|---|---|---|
+| Google Gemini | `GEMINI_API_KEY` | Yes | `gemini-3.8-flash` | Recommended. On the free tier, Google may use prompts to improve its products. |
+| Groq | `GROQ_API_KEY` | Yes | `openai/gpt-oss-120b` | Very fast, but the free plan allows about 8K tokens a minute, so roughly one answer a minute. |
+| Mistral | `MISTRAL_API_KEY` | No | `mistral-small-latest` | Keys only work on a paid plan or with pay-as-you-go turned on. |
+| Anything OpenAI-compatible | `LLM_API_KEY` | Varies | set `LLM_MODEL` | Set `LLM_PROVIDER=custom` and `LLM_BASE_URL`. Works with OpenRouter, Cerebras or a local server. |
+
+Other settings:
+
+| Variable | Default | Notes |
+|---|---|---|
+| `LLM_PROVIDER` | auto | Force `gemini`, `groq`, `mistral` or `custom` |
+| `LLM_MODEL` | per provider | Use another model, such as `gemini-3.5-flash-lite` if you hit Gemini's free rate limits |
+| `TAVILY_SEARCH_DEPTH` | `advanced` | `basic` uses fewer Tavily credits |
+
+Free-tier limits change often. Check your current limits in Google AI Studio or the Groq console.
+
+### When something goes wrong
+
+HyperLex shows a plain message in the answer area:
+
+- **No key, or key rejected**: check `.env.local`, then restart `bun dev`. A Mistral key on the Free plan is rejected until you upgrade.
+- **Rate limit reached**: wait a minute. Free tiers also have daily caps.
+- **Model not available**: set `LLM_MODEL` to another model from your provider.
+- **Empty answer**: try again, or switch to another model with `LLM_MODEL`.
+
+## Tech
+
+Next.js 16 (App Router), TypeScript, Tailwind CSS, react-markdown. Fonts (Literata for answers, Schibsted Grotesk for the interface) are self-hosted with `next/font`, so nothing loads from Google Fonts at runtime.
+
+## Disclaimer
+
+This is a weekend project, not the next billion-dollar startup. Use it, break it, learn from it. Answers can be wrong, so check the sources before relying on anything important.
