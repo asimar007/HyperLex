@@ -4,6 +4,8 @@ import { SearchError, searchWeb } from "@/server/tavily";
 import { answerMessages, recentHistory, rewriteMessages } from "@/server/prompts";
 
 const MAX_QUERY_CHARS = 2000;
+/** How many search results the model reads */
+const MAX_SOURCES = 6;
 
 function jsonError(message: string, status: number) {
   return Response.json({ error: message }, { status });
@@ -71,12 +73,12 @@ export async function POST(req: Request) {
       try {
         // 1. Work out what to search for
         const searchQuery = searchHint || (await buildSearchQuery(config, query, history, upstream.signal));
-        send({ type: "status", stage: "searching", searchQuery });
+        send({ type: "status", searchQuery });
 
         // 2. Search the web
         const { sources, images } = await searchWeb(searchQuery, {
           signal: upstream.signal,
-          maxResults: config.maxSources,
+          maxResults: MAX_SOURCES,
         });
         if (sources.length === 0) {
           send({
@@ -90,20 +92,20 @@ export async function POST(req: Request) {
           type: "sources",
           sources: sources.map((s) => ({ ...s, content: s.content.slice(0, 400) })),
           images,
+          model: config.model,
         });
-        send({ type: "meta", model: config.model });
 
         // 3. Stream the cited answer
-        const messages = answerMessages({ query, searchQuery, sources, history, sourceChars: config.sourceChars });
+        const prompt = answerMessages({ query, searchQuery, sources, history });
         let wrote = false;
-        for await (const content of stream(config, messages, { signal: upstream.signal })) {
+        for await (const content of stream(config, prompt, { signal: upstream.signal })) {
           wrote = true;
           send({ type: "delta", content });
         }
         if (!wrote) {
           send({
             type: "error",
-            message: `${config.label} returned an empty answer. Try again, or set LLM_MODEL to a different model.`,
+            message: "Gemini returned an empty answer. Try again, or set GEMINI_MODEL to a different model.",
           });
           return;
         }

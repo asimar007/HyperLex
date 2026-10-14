@@ -3,15 +3,7 @@ import { domainOf } from "@/lib/utils";
 
 const TAVILY_URL = "https://api.tavily.com/search";
 
-export class SearchError extends Error {
-  constructor(
-    public status: number,
-    message: string
-  ) {
-    super(message);
-    this.name = "SearchError";
-  }
-}
+export class SearchError extends Error {}
 
 interface TavilyResult {
   title?: string;
@@ -28,10 +20,7 @@ export async function searchWeb(
 ): Promise<{ sources: Source[]; images: SearchImage[] }> {
   const key = process.env.TAVILY_API_KEY?.trim();
   if (!key) {
-    throw new SearchError(
-      500,
-      "TAVILY_API_KEY is missing. Add it to .env.local and restart the dev server."
-    );
+    throw new SearchError("TAVILY_API_KEY is missing. Add it to .env.local and restart the dev server.");
   }
 
   const depth = process.env.TAVILY_SEARCH_DEPTH === "basic" ? "basic" : "advanced";
@@ -64,12 +53,12 @@ export async function searchWeb(
       /* plain text */
     }
     if (res.status === 401 || res.status === 403) {
-      throw new SearchError(res.status, "Tavily rejected the API key. Check TAVILY_API_KEY in .env.local.");
+      throw new SearchError("Tavily rejected the API key. Check TAVILY_API_KEY in .env.local.");
     }
     if (res.status === 429 || res.status === 432 || res.status === 433) {
-      throw new SearchError(res.status, "Tavily's rate limit or plan limit was reached. Try again later.");
+      throw new SearchError("Tavily's rate limit or plan limit was reached. Try again later.");
     }
-    throw new SearchError(res.status, `Web search failed: ${detail || res.statusText}`);
+    throw new SearchError(`Web search failed: ${detail || res.statusText}`);
   }
 
   const data = (await res.json()) as { results?: TavilyResult[]; images?: TavilyImage[] };

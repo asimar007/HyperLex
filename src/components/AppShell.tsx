@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Menu } from "lucide-react";
 import Logo from "./Logo";
@@ -13,8 +13,7 @@ const DESKTOP = "(min-width: 1024px)";
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { newChat } = useChat();
+  const { setActiveId } = useChat();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [desktopOpen, setDesktopOpen] = useState(true);
 
@@ -55,7 +54,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </button>
         <Link
           href="/"
-          onClick={() => newChat()}
+          onClick={() => setActiveId(null)}
           className="rounded-md px-1 py-1"
           aria-label="HyperLex, start new research"
         >
@@ -81,12 +80,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           desktopOpen ? "lg:visible lg:translate-x-0" : "lg:invisible lg:-translate-x-full"
         )}
       >
-        <Sidebar
-          onNavigate={(href) => {
-            setMobileOpen(false);
-            if (pathname !== href) router.push(href);
-          }}
-        />
+        <Sidebar onNavigate={() => setMobileOpen(false)} />
       </aside>
 
       <div className={classNames("pt-14 transition-[padding] duration-200", desktopOpen && "lg:pl-64")}>

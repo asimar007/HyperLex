@@ -53,9 +53,8 @@ export interface ChatRequestBody {
 
 /** Newline-delimited JSON events streamed by /api/chat */
 export type StreamEvent =
-  | { type: "status"; stage: "searching"; searchQuery: string }
-  | { type: "sources"; sources: Source[]; images: SearchImage[] }
-  | { type: "meta"; model: string }
+  | { type: "status"; searchQuery: string }
+  | { type: "sources"; sources: Source[]; images: SearchImage[]; model: string }
   | { type: "delta"; content: string }
   | { type: "done" }
   | { type: "error"; message: string };

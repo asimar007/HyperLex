@@ -1,10 +1,12 @@
 import type { HistoryItem, Source } from "@/types";
-import type { ChatMessage } from "./llm";
+import type { Prompt } from "./llm";
 
 import { FOLLOWUP_MARKER } from "@/lib/citations";
 
 const HISTORY_TURNS = 3;
 const HISTORY_ANSWER_CHARS = 1200;
+/** How much of each search result the model reads */
+const SOURCE_CHARS = 1500;
 
 function today(): string {
   return new Date().toLocaleDateString("en-US", {
@@ -35,25 +37,19 @@ export function recentHistory(history: HistoryItem[] = []): HistoryItem[] {
 }
 
 /** Messages asking the model to turn a follow-up into a standalone search query. */
-export function rewriteMessages(query: string, history: HistoryItem[]): ChatMessage[] {
+export function rewriteMessages(query: string, history: HistoryItem[]): Prompt {
   const transcript = history
     .map((h) => `User: ${h.query}\nAssistant: ${cleanAnswer(h.answer).slice(0, 300)}`)
     .join("\n\n");
 
-  return [
-    {
-      role: "system",
-      content:
-        "You rewrite the user's latest message into one standalone web search query. " +
-        "Use the conversation to resolve references such as \"it\", \"they\" or \"that company\". " +
-        "If the latest message is already standalone, return it unchanged. " +
-        "Reply with the query only: no quotes, no explanation, at most 20 words.",
-    },
-    {
-      role: "user",
-      content: `Conversation so far:\n${transcript}\n\nLatest message: ${query}`,
-    },
-  ];
+  return {
+    systemInstruction:
+      "You rewrite the user's latest message into one standalone web search query. " +
+      "Use the conversation to resolve references such as \"it\", \"they\" or \"that company\". " +
+      "If the latest message is already standalone, return it unchanged. " +
+      "Reply with the query only: no quotes, no explanation, at most 20 words.",
+    contents: [{ role: "user", parts: [{ text: `Conversation so far:\n${transcript}\n\nLatest message: ${query}` }] }],
+  };
 }
 
 const SYSTEM_PROMPT = `You are HyperLex, a research assistant that answers questions using fresh web search results.
@@ -73,12 +69,12 @@ How to answer:
 
 After the answer, write ${FOLLOWUP_MARKER} on its own line, then three short follow-up questions the user might ask next, one per line, without numbering or bullets.`;
 
-function formatSources(sources: Source[], sourceChars: number): string {
+function formatSources(sources: Source[]): string {
   return sources
     .map((s) => {
       const lines = [`[${s.id}] ${s.title}`, `URL: ${s.url}`];
       if (s.publishedDate) lines.push(`Published: ${s.publishedDate}`);
-      lines.push(s.content.slice(0, sourceChars));
+      lines.push(s.content.slice(0, SOURCE_CHARS));
       return lines.join("\n");
     })
     .join("\n\n");
@@ -89,33 +85,31 @@ export function answerMessages({
   searchQuery,
   sources,
   history,
-  sourceChars,
 }: {
   query: string;
   searchQuery: string;
   sources: Source[];
   history: HistoryItem[];
-  sourceChars: number;
-}): ChatMessage[] {
-  const messages: ChatMessage[] = [
-    { role: "system", content: SYSTEM_PROMPT.replace("{{DATE}}", today()) },
-  ];
-
-  for (const h of history) {
-    messages.push({ role: "user", content: h.query });
-    messages.push({ role: "assistant", content: cleanAnswer(h.answer) });
-  }
+}): Prompt {
+  const contents: Prompt["contents"] = history.flatMap((h) => [
+    { role: "user", parts: [{ text: h.query }] },
+    { role: "model", parts: [{ text: cleanAnswer(h.answer) }] },
+  ]);
 
   const searchNote =
     searchQuery.trim() !== query.trim() ? ` (searched for: "${searchQuery}")` : "";
 
-  messages.push({
+  contents.push({
     role: "user",
-    content:
-      `Question: ${query}\n\n` +
-      `Web search results${searchNote}:\n\n${formatSources(sources, sourceChars)}\n\n` +
-      `Answer the question using these sources and cite them by number.`,
+    parts: [
+      {
+        text:
+          `Question: ${query}\n\n` +
+          `Web search results${searchNote}:\n\n${formatSources(sources)}\n\n` +
+          `Answer the question using these sources and cite them by number.`,
+      },
+    ],
   });
 
-  return messages;
+  return { systemInstruction: SYSTEM_PROMPT.replace("{{DATE}}", today()), contents };
 }

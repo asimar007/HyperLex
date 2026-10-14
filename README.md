@@ -53,7 +53,7 @@ HyperLex uses Google Gemini AI powered by the `@google/genai` SDK.
 | Variable | Default | Free? | Notes |
 |---|---|---|---|
 | `GEMINI_API_KEY` | required | Yes | From [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
-| `GEMINI_MODEL` (or `LLM_MODEL`) | `gemini-3-flash-preview` | Yes | Free-tier model. Can be set to `gemini-3.5-flash-lite` or others |
+| `GEMINI_MODEL` | `gemini-3-flash-preview` | Yes | Free-tier model. Can be set to `gemini-3.5-flash-lite` or others |
 | `TAVILY_API_KEY` | required | Yes | From [app.tavily.com](https://app.tavily.com) |
 | `TAVILY_SEARCH_DEPTH` | `advanced` | - | `basic` uses fewer Tavily credits |
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, Copy, CornerDownRight, RotateCcw } from "lucide-react";
 import type { Turn } from "@/types";
 import { splitAnswer } from "@/lib/citations";
@@ -31,7 +31,6 @@ export default function TurnView({ turn, streaming, isLast, busy, onRetry, onAsk
   const [activeCite, setActiveCite] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const { answer, followUps } = useMemo(() => splitAnswer(turn.answer), [turn.answer]);
-  const onCiteHover = useCallback((n: number | null) => setActiveCite(n), []);
 
   const rewrote = turn.searchQuery && turn.searchQuery.trim() !== turn.query.trim();
 
@@ -68,7 +67,7 @@ export default function TurnView({ turn, streaming, isLast, busy, onRetry, onAsk
       )}
 
       {turn.sources.length > 0 && (
-        <SourceList sources={turn.sources} activeCite={activeCite} onHover={onCiteHover} />
+        <SourceList sources={turn.sources} activeCite={activeCite} onHover={setActiveCite} />
       )}
 
       {turn.status === "writing" && !answer && (
@@ -84,7 +83,7 @@ export default function TurnView({ turn, streaming, isLast, busy, onRetry, onAsk
             sources={turn.sources}
             streaming={streaming && turn.status === "writing"}
             activeCite={activeCite}
-            onCiteHover={onCiteHover}
+            onCiteHover={setActiveCite}
           />
         </div>
       )}

@@ -18,12 +18,10 @@ function LoadingShell() {
 }
 
 export default function Home() {
-  const { hydrated, active, isBusy, ask, stop, deleteConversation } = useChat();
+  const { hydrated, active, busyTurnId, ask, stop, deleteConversation } = useChat();
   const [input, setInput] = useState("");
-  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const submit = () => {
-    if (!input.trim() || isBusy) return;
     ask(input);
     setInput("");
   };
@@ -41,43 +39,22 @@ export default function Home() {
         <span className="truncate max-w-[20rem] text-xs font-medium text-muted">
           {active.title}
         </span>
-        {confirmDelete ? (
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-danger">Delete this chat?</span>
-            <button
-              type="button"
-              onClick={() => {
-                deleteConversation(active.id);
-                setConfirmDelete(false);
-              }}
-              className="rounded bg-danger/10 px-2 py-1 text-xs font-semibold text-danger transition-colors hover:bg-danger/20"
-            >
-              Delete
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmDelete(false)}
-              className="rounded px-2 py-1 text-xs font-medium text-muted transition-colors hover:bg-rule hover:text-ink"
-            >
-              Cancel
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setConfirmDelete(true)}
-            className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted transition-colors hover:bg-danger/10 hover:text-danger"
-            title="Delete this chat"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            <span>Delete chat</span>
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => {
+            if (window.confirm("Delete this chat?")) deleteConversation(active.id);
+          }}
+          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted transition-colors hover:bg-danger/10 hover:text-danger"
+          title="Delete this chat"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          <span>Delete chat</span>
+        </button>
       </div>
 
       <Thread conversation={active} />
       <div className="sticky bottom-0 z-10 mt-auto bg-gradient-to-t from-paper from-70% to-paper/0 pb-4 pt-8">
-        <Composer value={input} onChange={setInput} onSubmit={submit} onStop={stop} busy={isBusy} />
+        <Composer value={input} onChange={setInput} onSubmit={submit} onStop={stop} busy={busyTurnId !== null} />
         <p className="mt-2 text-center text-xs text-muted">
           Answers can be wrong. Check the sources before relying on anything important.
         </p>

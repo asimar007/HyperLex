@@ -6,7 +6,7 @@ import { useChat } from "@/context/ChatProvider";
 import TurnView from "./TurnView";
 
 export default function Thread({ conversation }: { conversation: Conversation }) {
-  const { busyTurnId, isBusy, ask, retry } = useChat();
+  const { busyTurnId, ask, retry } = useChat();
   const turnCount = conversation.turns.length;
   const previous = useRef({ id: conversation.id, count: turnCount });
 
@@ -34,7 +34,7 @@ export default function Thread({ conversation }: { conversation: Conversation })
           turn={turn}
           streaming={turn.id === busyTurnId}
           isLast={i === turnCount - 1}
-          busy={isBusy}
+          busy={busyTurnId !== null}
           onRetry={retry}
           onAsk={(q) => ask(q)}
         />

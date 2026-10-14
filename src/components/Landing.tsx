@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { MessageSquareText } from "lucide-react";
 import Composer from "./Composer";
 import { useChat } from "@/context/ChatProvider";
@@ -82,8 +82,7 @@ function HackerNewsPreview() {
 }
 
 export default function Landing({ input, setInput, onSubmit }: LandingProps) {
-  const { ask, isBusy, stop } = useChat();
-  const composerRef = useRef<HTMLTextAreaElement>(null);
+  const { ask, busyTurnId, stop } = useChat();
 
   return (
     <div className="mx-auto max-w-[46rem] px-5 pb-20 pt-[9vh] md:pt-[14vh]">
@@ -97,12 +96,11 @@ export default function Landing({ input, setInput, onSubmit }: LandingProps) {
 
       <div className="mt-8">
         <Composer
-          ref={composerRef}
           value={input}
           onChange={setInput}
           onSubmit={onSubmit}
           onStop={stop}
-          busy={isBusy}
+          busy={busyTurnId !== null}
           autoFocus
           large
           placeholder="Ask anything, like “How does UPI make money?”"

@@ -1,6 +1,5 @@
 "use client";
 
-import { forwardRef, useImperativeHandle, useLayoutEffect, useRef } from "react";
 import { ArrowUp, Square } from "lucide-react";
 import { classNames } from "@/lib/utils";
 
@@ -15,23 +14,16 @@ interface ComposerProps {
   placeholder?: string;
 }
 
-const MAX_HEIGHT = 220;
-
-const Composer = forwardRef<HTMLTextAreaElement, ComposerProps>(function Composer(
-  { value, onChange, onSubmit, onStop, busy, autoFocus, large, placeholder = "Ask a follow-up" },
-  ref
-) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  useImperativeHandle(ref, () => textareaRef.current as HTMLTextAreaElement);
-
-  // Grow with the text, up to a limit
-  useLayoutEffect(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, MAX_HEIGHT)}px`;
-  }, [value]);
-
+export default function Composer({
+  value,
+  onChange,
+  onSubmit,
+  onStop,
+  busy,
+  autoFocus,
+  large,
+  placeholder = "Ask a follow-up",
+}: ComposerProps) {
   const canSend = value.trim().length > 0 && !busy;
 
   return (
@@ -50,7 +42,6 @@ const Composer = forwardRef<HTMLTextAreaElement, ComposerProps>(function Compose
       </label>
       <textarea
         id="composer"
-        ref={textareaRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
@@ -64,7 +55,8 @@ const Composer = forwardRef<HTMLTextAreaElement, ComposerProps>(function Compose
         placeholder={placeholder}
         maxLength={2000}
         className={classNames(
-          "block w-full resize-none bg-transparent pr-12 text-ink placeholder:text-muted/80 focus:outline-none",
+          // field-sizing grows the box with the text, up to max-h
+          "block max-h-[220px] w-full resize-none bg-transparent pr-12 [field-sizing:content] text-ink placeholder:text-muted/80 focus:outline-none",
           large ? "min-h-[3.5rem] px-2 py-1.5 text-lg" : "min-h-[2.5rem] px-2 py-2 text-base"
         )}
       />
@@ -93,6 +85,4 @@ const Composer = forwardRef<HTMLTextAreaElement, ComposerProps>(function Compose
       </div>
     </form>
   );
-});
-
-export default Composer;
+}

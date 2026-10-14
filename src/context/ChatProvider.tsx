@@ -29,12 +29,11 @@ interface ChatContextValue {
   active: Conversation | null;
   activeId: string | null;
   busyTurnId: string | null;
-  isBusy: boolean;
   ask: (query: string, options?: AskOptions) => void;
   retry: (turnId: string) => void;
   stop: () => void;
-  newChat: () => void;
-  openConversation: (id: string) => void;
+  /** Open a conversation, or null to start a new one */
+  setActiveId: (id: string | null) => void;
   deleteConversation: (id: string) => void;
 }
 
@@ -150,11 +149,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
               patchTurn(conversationId, turn.id, {
                 sources: event.sources,
                 images: event.images,
+                model: event.model,
                 status: "writing",
               });
-              break;
-            case "meta":
-              patchTurn(conversationId, turn.id, { model: event.model });
               break;
             case "delta":
               answer += event.content;
@@ -268,10 +265,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   const stop = useCallback(() => abortRef.current?.abort(), []);
 
-  const newChat = useCallback(() => setActiveId(null), []);
-
-  const openConversation = useCallback((id: string) => setActiveId(id), []);
-
   const deleteConversation = useCallback(
     (id: string) => {
       const conversation = conversationsRef.current.find((c) => c.id === id);
@@ -289,15 +282,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       active: conversations.find((c) => c.id === activeId) ?? null,
       activeId,
       busyTurnId,
-      isBusy: busyTurnId !== null,
       ask,
       retry,
       stop,
-      newChat,
-      openConversation,
+      setActiveId,
       deleteConversation,
     }),
-    [hydrated, conversations, activeId, busyTurnId, ask, retry, stop, newChat, openConversation, deleteConversation]
+    [hydrated, conversations, activeId, busyTurnId, ask, retry, stop, deleteConversation]
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
