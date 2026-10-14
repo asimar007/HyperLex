@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Newspaper, Plus, Search, Trash2 } from "lucide-react";
+import { Check, Newspaper, Plus, Search, Trash2, X } from "lucide-react";
 import { useChat } from "@/context/ChatProvider";
 import { classNames } from "@/lib/utils";
 
@@ -10,11 +10,20 @@ export default function Sidebar({ onNavigate }: { onNavigate: (href: string) => 
   const pathname = usePathname();
   const { hydrated, conversations, activeId, busyTurnId, newChat, openConversation, deleteConversation } =
     useChat();
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   const recent = useMemo(
     () => [...conversations].sort((a, b) => b.updatedAt - a.updatedAt),
     [conversations]
   );
+
+  // Close confirmation state on click outside
+  useEffect(() => {
+    if (!confirmingId) return;
+    const onDocumentClick = () => setConfirmingId(null);
+    window.addEventListener("click", onDocumentClick);
+    return () => window.removeEventListener("click", onDocumentClick);
+  }, [confirmingId]);
 
   const navItem = (active: boolean) =>
     classNames(
@@ -28,6 +37,7 @@ export default function Sidebar({ onNavigate }: { onNavigate: (href: string) => 
         type="button"
         className="btn-primary w-full justify-start"
         onClick={() => {
+          setConfirmingId(null);
           newChat();
           onNavigate("/");
         }}
@@ -38,7 +48,14 @@ export default function Sidebar({ onNavigate }: { onNavigate: (href: string) => 
 
       <ul className="space-y-0.5">
         <li>
-          <button type="button" className={navItem(pathname === "/")} onClick={() => onNavigate("/")}>
+          <button
+            type="button"
+            className={navItem(pathname === "/")}
+            onClick={() => {
+              setConfirmingId(null);
+              onNavigate("/");
+            }}
+          >
             <Search className="h-4 w-4" />
             Research
           </button>
@@ -47,7 +64,10 @@ export default function Sidebar({ onNavigate }: { onNavigate: (href: string) => 
           <button
             type="button"
             className={navItem(pathname === "/hackernews")}
-            onClick={() => onNavigate("/hackernews")}
+            onClick={() => {
+              setConfirmingId(null);
+              onNavigate("/hackernews");
+            }}
           >
             <Newspaper className="h-4 w-4" />
             Hacker News
@@ -67,11 +87,13 @@ export default function Sidebar({ onNavigate }: { onNavigate: (href: string) => 
             {recent.map((c) => {
               const isActive = pathname === "/" && c.id === activeId;
               const isWorking = c.turns.some((t) => t.id === busyTurnId);
+              const isConfirming = confirmingId === c.id;
               return (
                 <li key={c.id} className="group relative">
                   <button
                     type="button"
                     onClick={() => {
+                      setConfirmingId(null);
                       openConversation(c.id);
                       onNavigate("/");
                     }}
@@ -84,16 +106,53 @@ export default function Sidebar({ onNavigate }: { onNavigate: (href: string) => 
                     {isWorking && <span className="pulse-dot shrink-0" aria-label="Working" />}
                     <span className="truncate">{c.title}</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (window.confirm(`Delete "${c.title}"?`)) deleteConversation(c.id);
-                    }}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted opacity-0 transition-opacity hover:bg-rule hover:text-danger focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
-                    aria-label={`Delete ${c.title}`}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+
+                  {isConfirming ? (
+                    <div
+                      className="absolute right-1 top-1/2 z-10 flex -translate-y-1/2 items-center gap-1 rounded-md border border-rule bg-surface px-1.5 py-0.5 shadow-sm"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span className="text-[11px] font-medium text-danger">Delete?</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteConversation(c.id);
+                          setConfirmingId(null);
+                        }}
+                        className="rounded p-1 text-danger hover:bg-danger/10 transition-colors"
+                        aria-label={`Confirm delete ${c.title}`}
+                        title="Delete"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmingId(null);
+                        }}
+                        className="rounded p-1 text-muted hover:bg-rule hover:text-ink transition-colors"
+                        aria-label="Cancel delete"
+                        title="Cancel"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmingId(c.id);
+                      }}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted opacity-0 transition-opacity hover:bg-rule hover:text-danger focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+                      aria-label={`Delete ${c.title}`}
+                      title="Delete chat"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </li>
               );
             })}
