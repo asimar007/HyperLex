@@ -4,7 +4,7 @@ _Your curious companion for smarter web exploration_
 
 Ask a question and HyperLex searches the web, reads what it finds, and writes an answer with numbered citations you can check. Hover a citation to preview its source; the matching source card lights up like a highlighter mark. It shares DNA with Perplexity, plus a live Hacker News feed where any story is one click away from a sourced summary.
 
-It runs on free API tiers: Google Gemini (or Groq) for writing and Tavily for search. Any OpenAI-compatible provider works.
+It runs on free API tiers: Google Gemini (using the official `@google/genai` SDK) for reasoning and Tavily for search.
 
 ## Features
 
@@ -19,22 +19,22 @@ It runs on free API tiers: Google Gemini (or Groq) for writing and Tavily for se
 
 ```
 Browser ──POST /api/chat──▶ API route
-                             1. Rewrite follow-ups into a search query (LLM)
+                             1. Rewrite follow-ups into a search query (Gemini)
                              2. Search the web (Tavily)
-                             3. Stream a cited answer (LLM)
+                             3. Stream a cited answer (Gemini)
         ◀── NDJSON events: status, sources, meta, delta, done | error
 ```
 
 - `src/app/api/chat/route.ts` runs the pipeline and streams events.
-- `src/server/llm.ts` talks to any OpenAI-compatible API, with presets for Gemini, Groq and Mistral. `src/server/` also holds the Tavily client and prompts. API keys never reach the browser.
+- `src/server/llm.ts` integrates with Google Gemini AI via `@google/genai`. `src/server/` also holds the Tavily client and prompts. API keys never reach the browser.
 - `src/context/ChatProvider.tsx` holds conversations, streaming and persistence, so an answer keeps streaming even if you switch to the Hacker News page.
 
 ## Setup
 
-You'll need Node.js 18.17 or newer, plus two free API keys:
+You'll need Node.js 20 or newer (or Bun), plus two free API keys:
 
-- **Google Gemini** for writing answers: create a key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). No card needed.
-- **Tavily** for web search: create a key at [app.tavily.com](https://app.tavily.com).
+- **Google Gemini** for writing answers: create a free key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). No credit card needed.
+- **Tavily** for web search: create a free key at [app.tavily.com](https://app.tavily.com).
 
 ```bash
 git clone https://github.com/asimar007/HyperLex
@@ -46,39 +46,29 @@ bun dev
 
 Open http://localhost:3000.
 
-### Choosing an AI provider
+### AI Configuration
 
-Set one key and HyperLex picks the provider automatically. If several keys are set, Gemini wins, then Groq, then Mistral.
+HyperLex uses Google Gemini AI powered by the `@google/genai` SDK.
 
-| Provider | Key | Free? | Default model | Notes |
-|---|---|---|---|---|
-| Google Gemini | `GEMINI_API_KEY` | Yes | `gemini-3.8-flash` | Recommended. On the free tier, Google may use prompts to improve its products. |
-| Groq | `GROQ_API_KEY` | Yes | `openai/gpt-oss-120b` | Very fast, but the free plan allows about 8K tokens a minute, so roughly one answer a minute. |
-| Mistral | `MISTRAL_API_KEY` | No | `mistral-small-latest` | Keys only work on a paid plan or with pay-as-you-go turned on. |
-| Anything OpenAI-compatible | `LLM_API_KEY` | Varies | set `LLM_MODEL` | Set `LLM_PROVIDER=custom` and `LLM_BASE_URL`. Works with OpenRouter, Cerebras or a local server. |
-
-Other settings:
-
-| Variable | Default | Notes |
-|---|---|---|
-| `LLM_PROVIDER` | auto | Force `gemini`, `groq`, `mistral` or `custom` |
-| `LLM_MODEL` | per provider | Use another model, such as `gemini-3.5-flash-lite` if you hit Gemini's free rate limits |
-| `TAVILY_SEARCH_DEPTH` | `advanced` | `basic` uses fewer Tavily credits |
-
-Free-tier limits change often. Check your current limits in Google AI Studio or the Groq console.
+| Variable | Default | Free? | Notes |
+|---|---|---|---|
+| `GEMINI_API_KEY` | required | Yes | From [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
+| `GEMINI_MODEL` (or `LLM_MODEL`) | `gemini-3-flash-preview` | Yes | Free-tier model. Can be set to `gemini-3.5-flash-lite` or others |
+| `TAVILY_API_KEY` | required | Yes | From [app.tavily.com](https://app.tavily.com) |
+| `TAVILY_SEARCH_DEPTH` | `advanced` | - | `basic` uses fewer Tavily credits |
 
 ### When something goes wrong
 
 HyperLex shows a plain message in the answer area:
 
-- **No key, or key rejected**: check `.env.local`, then restart `bun dev`. A Mistral key on the Free plan is rejected until you upgrade.
+- **No key, or key rejected**: check `.env.local`, then restart `bun dev`.
 - **Rate limit reached**: wait a minute. Free tiers also have daily caps.
-- **Model not available**: set `LLM_MODEL` to another model from your provider.
-- **Empty answer**: try again, or switch to another model with `LLM_MODEL`.
+- **High demand**: if experiencing temporary spikes in demand, set `GEMINI_MODEL=gemini-3.5-flash-lite` in `.env.local`.
+- **Empty answer**: try again, or switch to another model with `GEMINI_MODEL`.
 
 ## Tech
 
-Next.js 16 (App Router), TypeScript, Tailwind CSS, react-markdown. Fonts (Literata for answers, Schibsted Grotesk for the interface) are self-hosted with `next/font`, so nothing loads from Google Fonts at runtime.
+Next.js 16 (App Router), TypeScript, Tailwind CSS, Google Gen AI SDK (`@google/genai`), react-markdown. Fonts (Literata for answers, Schibsted Grotesk for the interface) are self-hosted with `next/font`, so nothing loads from Google Fonts at runtime.
 
 ## Disclaimer
 
