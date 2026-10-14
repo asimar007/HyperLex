@@ -1,4 +1,5 @@
 // Gemini AI client using the official Google Gen AI SDK (@google/genai).
+import "server-only";
 import { ApiError, GoogleGenAI, type Content } from "@google/genai";
 
 /** A system instruction plus the conversation, in Gemini's request shape. */

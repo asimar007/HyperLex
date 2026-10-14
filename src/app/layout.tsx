@@ -14,7 +14,6 @@ export const metadata: Metadata = {
   },
   description:
     "Ask a question and HyperLex searches the web, reads the results, and writes an answer with numbered sources.",
-  icons: { icon: "/favicon.ico" },
 };
 
 export const viewport: Viewport = {

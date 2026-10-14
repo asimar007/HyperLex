@@ -1,3 +1,4 @@
+import "server-only";
 import type { SearchImage, Source } from "@/types";
 import { domainOf } from "@/lib/utils";
 
